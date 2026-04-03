@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const chapterSchema = new mongoose.Schema({
   course: {
     type: mongoose.Schema.ObjectId,
-    ref:'Course'
+    ref: "Course",
     required: [true, "A chapter must belong to some course"],
   },
   number: {
@@ -18,7 +18,6 @@ const chapterSchema = new mongoose.Schema({
     {
       type: mongoose.Schema.ObjectId,
       ref: "Lecture",
-      required: [true, "A chapter must inlcude some lecture"],
     },
   ],
 });

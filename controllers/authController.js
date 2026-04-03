@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const User = require("./../models/userModel");
 const catchAsync = require("./../utils/catchAsync");
 const appError = require("./../utils/appClass");
-const { promosify } = require("util");
+const { promisify } = require("util");
 const createToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
     expiresIn: process.env.JWT_EXPIRES_IN,

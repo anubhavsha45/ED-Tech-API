@@ -15,7 +15,6 @@ const courseSchema = new mongoose.Schema({
     {
       type: mongoose.Schema.ObjectId,
       ref: "Chapter",
-      required: [true, "A book must include chapters"],
     },
   ],
 });

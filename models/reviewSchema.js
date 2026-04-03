@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const reviewSchema = new mongoose.Schema({
   course: {
     type: mongoose.Schema.ObjectId,
-    ref: "Chapter",
+    ref: "Course",
     required: [true, "A review must belong to some course"],
   },
   user: {
