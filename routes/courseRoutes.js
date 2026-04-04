@@ -6,6 +6,8 @@ const chapterController = require("./../controllers/chapterController");
 const lectureController = require("./../controllers/lectureController");
 const upload = require("./../utils/multer");
 
+router.route("/overview").get(courseController.getOverview);
+
 router.use(authController.protect);
 
 router
@@ -22,6 +24,17 @@ router
     authController.restrictTo("teacher"),
     upload.single("video"),
     lectureController.createLecture,
+  );
+
+router
+  .route("/")
+  .get(authController.restrictTo("admin"), courseController.getCourses);
+
+router
+  .route("/:courseId")
+  .get(
+    authController.restrictTo("admin", "student"),
+    courseController.getCourse,
   );
 
 module.exports = router;
