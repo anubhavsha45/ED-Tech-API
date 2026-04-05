@@ -9,6 +9,8 @@
   "author": "Anubhav Sharma",
   "license": "ISC",
   "dependencies": {
+    "@google/genai": "^1.48.0",
+    "@google/generative-ai": "^0.24.1",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^1.41.3",
     "dotenv": "^17.4.0",

@@ -94,6 +94,30 @@ exports.getCourse = catchAsync(async (req, res, next) => {
     });
   }
 
+  if (req.user.role === "teacher") {
+    const course = await Course.findById(courseId);
+
+    if (!course) {
+      return next(new appError("Course not found", 404));
+    }
+
+    if (!course.createdBy.equals(req.user._id)) {
+      return next(new AbstractRangeppError("Not authorized", 403));
+    }
+
+    const fullCourse = await Course.findById(courseId)
+      .populate("createdBy", "name email")
+      .populate({
+        path: "chapters",
+        populate: { path: "lecture" },
+      });
+
+    return res.status(200).json({
+      status: "success",
+      data: { course: fullCourse },
+    });
+  }
+
   const enrollment = await Enrollment.findOne({
     course: courseId,
     user: req.user._id,

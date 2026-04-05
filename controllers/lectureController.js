@@ -13,10 +13,16 @@ exports.createLecture = catchAsync(async (req, res, next) => {
   if (!chapter) {
     return next(new appError("There is no chapter with this id", 400));
   }
+  const course = await Course.findById(chapter.course);
 
-  const { number, name, notes } = req.body;
+  if (!course.createdBy.equals(req.user._id)) {
+    return next(new appError("not authorized", 401));
+  }
 
-  const videoUrl = req.file.path;
+  const { number, name } = req.body;
+
+  const videoUrl = req.files?.video?.[0]?.path;
+  const notes = req.files?.notes?.[0]?.path;
 
   if (!number || !name || !videoUrl) {
     return next(
@@ -43,6 +49,51 @@ exports.createLecture = catchAsync(async (req, res, next) => {
     status: "success",
     data: {
       lecture,
+    },
+  });
+});
+
+exports.updateLecture = catchAsync(async (req, res, next) => {
+  const { lectureId } = req.params;
+
+  const { number, name, description } = req.body;
+
+  const notes = req.file?.path;
+
+  const lecture = await Lecture.findById(lectureId);
+
+  if (!lecture) {
+    return next(new appError("There is no lecture with this id", 400));
+  }
+  const chapter = await Chapter.findById(lecture.chapter);
+  const course = await Course.findById(chapter.course);
+
+  if (!course.createdBy.equals(req.user._id)) {
+    return next(
+      new appError(
+        "You did not created this course to which this lecture is assigned",
+        400,
+      ),
+    );
+  }
+  const updatedLecture = await Lecture.findByIdAndUpdate(
+    lectureId,
+    {
+      number,
+      name,
+      notes,
+      description,
+    },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+
+  return res.status(200).json({
+    status: "success",
+    data: {
+      lecture: updatedLecture,
     },
   });
 });

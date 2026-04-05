@@ -13,9 +13,33 @@ const lectureSchema = new mongoose.Schema({
     type: String,
     required: [true, "A lecture must have some name"],
   },
+  description: {
+    type: String,
+    default: "",
+  },
   notes: {
     type: String,
   },
+  aiNotes: {
+    type: Object,
+    default: "",
+  },
+  quiz: [
+    {
+      question: {
+        type: String,
+        required: true,
+      },
+      options: {
+        type: [String],
+        validate: [(arr) => arr.length === 4, "Must have 4 options"],
+      },
+      correctAnswer: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
   videoUrl: {
     type: String,
     required: true,

@@ -3,13 +3,13 @@ const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("./cloudinary");
 
 const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+  cloudinary,
   params: {
-    folder: "lectures",
-    resource_type: "video", // VERY IMPORTANT
+    folder: "notes",
+    resource_type: "raw",
   },
 });
 
-const upload = multer({ storage });
+const uploadFile = multer({ storage });
 
-module.exports = upload;
+module.exports = uploadFile;
