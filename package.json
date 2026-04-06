@@ -2,8 +2,9 @@
   "name": "edtech-api",
   "version": "1.0.0",
   "description": "API for edtech firm",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "dev": "nodemon server.js"
   },
   "author": "Anubhav Sharma",
@@ -15,6 +16,7 @@
     "cloudinary": "^1.41.3",
     "dotenv": "^17.4.0",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.3.2",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.3.3",
     "multer": "^2.1.1",
