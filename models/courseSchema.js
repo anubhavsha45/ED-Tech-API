@@ -11,6 +11,11 @@ const courseSchema = new mongoose.Schema({
     required: [true, "A course must have some title"],
   },
 
+  description: {
+    type: String,
+    default: "",
+  },
+
   chapters: [
     {
       type: mongoose.Schema.ObjectId,

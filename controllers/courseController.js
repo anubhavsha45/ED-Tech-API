@@ -7,7 +7,7 @@ const appError = require("./../utils/appClass");
 const Enrollment = require("./../models/enrollSchema");
 
 exports.createCourse = catchAsync(async (req, res, next) => {
-  const { title, chapters } = req.body;
+  const { title, chapters, description } = req.body;
 
   if (!title) {
     return next(new appError("Please give the title of your course", 400));
@@ -17,6 +17,7 @@ exports.createCourse = catchAsync(async (req, res, next) => {
     createdBy: req.user._id,
     title,
     chapters,
+    description,
   });
 
   return res.status(201).json({
@@ -102,7 +103,7 @@ exports.getCourse = catchAsync(async (req, res, next) => {
     }
 
     if (!course.createdBy.equals(req.user._id)) {
-      return next(new AbstractRangeppError("Not authorized", 403));
+      return next(new appError("Not authorized", 403));
     }
 
     const fullCourse = await Course.findById(courseId)

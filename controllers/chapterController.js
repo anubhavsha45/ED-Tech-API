@@ -12,7 +12,14 @@ exports.createChapter = catchAsync(async (req, res, next) => {
   if (!course) {
     return next(new appError("There is no course with this id", 400));
   }
-
+  if (!course.createdBy.equals(req.user._id)) {
+    return next(
+      new appError(
+        "You did not created this course to which this lecture is assigned",
+        400,
+      ),
+    );
+  }
   const { number, name, lecture } = req.body;
 
   if (!number || !name) {
