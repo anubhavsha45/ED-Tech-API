@@ -15,6 +15,10 @@ router
   .post(authController.restrictTo("teacher"), courseController.createCourse);
 
 router
+  .route("/:courseID")
+  .delete(authController.restrictTo("admin"), courseController.deleteCourse);
+
+router
   .route("/chapters/:courseId")
   .post(authController.restrictTo("teacher"), chapterController.createChapter);
 

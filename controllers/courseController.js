@@ -164,3 +164,17 @@ exports.getCourse = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.deleteCourse = catchAsync(async (req, res, next) => {
+  const { courseId } = req.params;
+
+  const course = await Course.findById(courseId);
+
+  if (!course) {
+    return next(new appError("There is no course exists with that id", 400));
+  }
+
+  await Course.findByIdAndDelete(courseId);
+
+  return res.status(204).send();
+});

@@ -221,9 +221,9 @@ Rules:
     data: { quiz },
   });
 });
+
 exports.doubtSolver = catchAsync(async (req, res, next) => {
   const { lectureId } = req.params;
-
   const { doubt } = req.body;
 
   if (!doubt) {
@@ -259,31 +259,53 @@ exports.doubtSolver = catchAsync(async (req, res, next) => {
     return next(new appError("There is no description for this lecture", 400));
   }
 
-  const prompt = `
-   You are an expert teacher who explains concepts clearly to beginners.
+  if (
+    lecture.lastDoubt &&
+    lecture.lastAnswer &&
+    lecture.lastDoubt.toLowerCase().trim() === doubt.toLowerCase().trim()
+  ) {
+    return res.status(200).json({
+      status: "success",
+      data: {
+        answer: lecture.lastAnswer,
+        cached: true,
+      },
+    });
+  }
 
-Your job is to answer student doubts based ONLY on the lecture context.
+  const prompt = `
+You are an expert teacher who explains concepts clearly to beginners.
+
+Your job is to answer student doubts using:
+1. Lecture context
+2. Previous conversation (chat history)
+
+IMPORTANT:
+- You MUST use previous conversation when relevant
+- If the student uses words like "it", "this", "that", "previous", etc.,
+  infer meaning from the chat history
+- Maintain a natural conversational tone when needed
 
 Lecture Context:
 "${lecture.description}"
 
-Student Question:
-"${doubt}"
-
 Rules:
-1. If the question is NOT related to the lecture context:
+1. If the question is related to the lecture OR previous conversation:
+   - Answer it clearly
+
+2. If the question is completely unrelated to BOTH lecture AND chat history:
    - Return:
    {
      "answer": "This question is not related to this lecture. Please ask questions relevant to the topic."
    }
 
-2. If the question IS relevant:
-   - Give a clear and simple explanation
+3. Answer Guidelines:
    - Use beginner-friendly language
    - Keep answer concise (5–8 lines max)
    - Use examples if helpful
+   - If it's a follow-up, you may refer to previous question naturally
 
-3. IMPORTANT:
+4. IMPORTANT:
    - Return ONLY valid JSON
    - Do NOT include markdown, backticks, or extra text
    - Output must be strictly in this format:
@@ -291,36 +313,91 @@ Rules:
 {
   "answer": "your answer here"
 }
+
+If you fail to follow JSON format, return:
+{ "answer": "Sorry, I could not process this question." }
 `;
+
+  const history = (lecture.chatHistory || []).slice(-5).map((msg) => ({
+    role: msg.role === "ai" ? "model" : "user",
+    parts: [{ text: msg.message }],
+  }));
+
+  const contents = [
+    {
+      role: "model",
+      parts: [{ text: prompt }],
+    },
+    ...history,
+    {
+      role: "user",
+      parts: [{ text: doubt }],
+    },
+  ];
+
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash-lite",
-    contents: prompt,
+    contents,
   });
 
   let text = response.text;
 
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-
-  if (start === -1 || end === -1) {
-    return next(new appError("Invalid AI response format", 500));
+  if (!text) {
+    return next(new appError("Empty AI response", 500));
   }
 
-  const jsonString = text.substring(start, end + 1);
+  text = text
+    .replace(/```json/g, "")
+    .replace(/```/g, "")
+    .trim();
 
-  let answer;
+  let parsed;
 
   try {
-    answer = JSON.parse(jsonString);
+    parsed = JSON.parse(text);
   } catch (err) {
-    console.error("Answer parse failed:", jsonString);
-    return next(new appError("Failed to parse answer", 500));
+    const start = text.indexOf("{");
+    const end = text.lastIndexOf("}");
+
+    if (start === -1 || end === -1) {
+      console.error("RAW AI RESPONSE:", text);
+      return next(new appError("Invalid AI response format", 500));
+    }
+
+    const jsonString = text.substring(start, end + 1);
+
+    try {
+      parsed = JSON.parse(jsonString);
+    } catch (e) {
+      console.error("JSON EXTRACT FAILED:", jsonString);
+      return next(new appError("Failed to parse answer", 500));
+    }
   }
+
+  if (!parsed.answer) {
+    console.error("INVALID STRUCTURE:", parsed);
+    return next(new appError("Invalid AI response structure", 500));
+  }
+
+  lecture.lastDoubt = doubt;
+  lecture.lastAnswer = parsed.answer;
+
+  lecture.chatHistory = lecture.chatHistory || [];
+
+  lecture.chatHistory.push(
+    { role: "user", message: doubt },
+    { role: "ai", message: parsed.answer },
+  );
+
+  lecture.chatHistory = lecture.chatHistory.slice(-10);
+
+  await lecture.save();
 
   return res.status(200).json({
     status: "success",
     data: {
-      answer,
+      answer: parsed.answer,
+      cached: false,
     },
   });
 });

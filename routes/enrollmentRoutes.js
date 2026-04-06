@@ -12,4 +12,8 @@ router
     enrollController.createEnrollment,
   );
 
+router
+  .route("/:enrollId")
+  .delete(authController.restrictTo("admin"), enrollController.deleteEnroll);
+
 module.exports = router;

@@ -21,3 +21,15 @@ exports.createEnrollment = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.deleteEnroll = catchAsync(async (req, res, next) => {
+  const { enrollId } = req.params;
+
+  const enrollment = await Enroll.findByIdAndDelete(enrollId);
+
+  if (!enrollment) {
+    return next(new appError("There is no enrollment with this ID", 400));
+  }
+
+  return res.status(204).send();
+});

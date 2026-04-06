@@ -44,6 +44,25 @@ const lectureSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  lastDoubt: String,
+  lastAnswer: String,
+  chatHistory: [
+    {
+      role: {
+        type: String,
+        enum: ["user", "ai"],
+        required: true,
+      },
+      message: {
+        type: String,
+        required: true,
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
 });
 
 const Lecture = mongoose.model("Lecture", lectureSchema);
