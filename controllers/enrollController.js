@@ -33,3 +33,29 @@ exports.deleteEnroll = catchAsync(async (req, res, next) => {
 
   return res.status(204).send();
 });
+
+exports.getEnrolls = catchAsync(async (req, res, next) => {
+  const userId = req.user._id;
+
+  const enrollCourses = await Enroll.find({
+    user: userId,
+  }).populate({
+    path: "course",
+    select: "title description createdBy",
+    populate: {
+      path: "createdBy",
+      select: "name",
+    },
+  });
+  if (enrollCourses.length === 0) {
+    return next(
+      new appError("There are no enrolled courses for the logged in user", 400),
+    );
+  }
+  return res.status(200).json({
+    status: "success",
+    data: {
+      enrollCourses,
+    },
+  });
+});
