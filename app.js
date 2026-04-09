@@ -7,7 +7,24 @@ const lectureRoutes = require("./routes/lectureRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const globalErrorController = require("./controllers/errorController");
 const rateLimit = require("express-rate-limit");
+const cors = require("cors");
 
+const allowedOrigins = ["http://localhost:5173"];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  }),
+);
+
+app.options("*", cors());
 app.set("trust proxy", 1);
 
 //body parser
